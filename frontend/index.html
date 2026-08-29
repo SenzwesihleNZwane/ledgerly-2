@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledgerly — settle up, simply</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- ============ AUTH SCREEN ============ -->
+<section id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-mark">L</span>
+      <div>
+        <h1>Ledgerly</h1>
+        <p class="tagline">Split costs. Settle in the fewest payments possible.</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="login">Log in</button>
+      <button class="tab-btn" data-tab="register">Create account</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <label>Email
+        <input type="email" id="login-email" required placeholder="you@example.com">
+      </label>
+      <label>Password
+        <input type="password" id="login-password" required placeholder="••••••••">
+      </label>
+      <button type="submit" class="btn-primary">Log in</button>
+    </form>
+
+    <form id="register-form" class="auth-form hidden">
+      <label>Name
+        <input type="text" id="register-name" required placeholder="Alice Ndlovu">
+      </label>
+      <label>Email
+        <input type="email" id="register-email" required placeholder="you@example.com">
+      </label>
+      <label>Password
+        <input type="password" id="register-password" required placeholder="At least 6 characters">
+      </label>
+      <button type="submit" class="btn-primary">Create account</button>
+    </form>
+  </div>
+</section>
+
+<!-- ============ MAIN APP ============ -->
+<div id="app-shell" class="app-shell hidden">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="brand-mark small">L</span>
+      <span class="brand-word">Ledgerly</span>
+    </div>
+
+    <button id="new-group-btn" class="btn-secondary full-width">+ New group</button>
+
+    <nav id="group-list" class="group-list"></nav>
+
+    <div class="sidebar-footer">
+      <div id="current-user-name" class="current-user"></div>
+      <button id="logout-btn" class="link-btn">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main-panel">
+    <div id="empty-state" class="empty-state">
+      <p>Select a group on the left, or create one to get started.</p>
+    </div>
+
+    <div id="group-view" class="group-view hidden">
+      <header class="group-header">
+        <div>
+          <p class="eyebrow">Group</p>
+          <h2 id="group-name-heading"></h2>
+        </div>
+        <div class="header-actions">
+          <button id="add-member-btn" class="btn-secondary">+ Add member</button>
+          <button id="add-expense-btn" class="btn-primary">+ Add expense</button>
+        </div>
+      </header>
+
+      <div class="members-row" id="members-row"></div>
+
+      <div class="ledger-grid">
+        <section class="ledger-panel">
+          <h3 class="panel-title">Expenses</h3>
+          <div id="expense-list" class="expense-list"></div>
+        </section>
+
+        <section class="ledger-panel">
+          <h3 class="panel-title">Balances</h3>
+          <div id="balance-list" class="balance-list"></div>
+
+          <h3 class="panel-title" style="margin-top: 24px;">Settle up</h3>
+          <div id="settlement-list" class="settlement-list"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div id="modal-backdrop" class="modal-backdrop hidden">
+
+  <div id="new-group-modal" class="modal hidden">
+    <h3>New group</h3>
+    <form id="new-group-form">
+      <label>Group name
+        <input type="text" id="new-group-name" required placeholder="Cape Town Trip">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+        <button type="submit" class="btn-primary">Create group</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="add-member-modal" class="modal hidden">
+    <h3>Add member</h3>
+    <p class="modal-hint">They must already have a Ledgerly account.</p>
+    <form id="add-member-form">
+      <label>Email address
+        <input type="email" id="add-member-email" required placeholder="friend@example.com">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+        <button type="submit" class="btn-primary">Add to group</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="add-expense-modal" class="modal wide hidden">
+    <h3>Add expense</h3>
+    <form id="add-expense-form">
+      <label>Description
+        <input type="text" id="expense-description" required placeholder="Dinner at the harbour">
+      </label>
+
+      <div class="form-row">
+        <label>Amount
+          <input type="number" id="expense-amount" step="0.01" min="0.01" required placeholder="0.00">
+        </label>
+        <label>Paid by
+          <select id="expense-paid-by" required></select>
+        </label>
+      </div>
+
+      <label>Split
+        <select id="expense-split-type">
+          <option value="EQUAL">Split equally</option>
+          <option value="EXACT">Exact amounts</option>
+        </select>
+      </label>
+
+      <div id="expense-participants" class="participants-list"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+        <button type="submit" class="btn-primary">Save expense</button>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

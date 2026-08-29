@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run Ledgerly Backend",
+      "request": "launch",
+      "mainClass": "com.ledgerly.LedgerlyApplication",
+      "projectName": "ledgerly-backend",
+      "cwd": "${workspaceFolder}/backend"
+    }
+  ]
+}

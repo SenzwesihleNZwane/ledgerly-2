@@ -1,0 +1,9 @@
+{
+  "java.project.sourcePaths": ["backend/src/main/java"],
+  "java.import.maven.enabled": true,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "maven.executable.preferMavenWrapper": false,
+  "liveServer.settings.root": "/frontend",
+  "liveServer.settings.port": 5500,
+  "java.compile.nullAnalysis.mode": "automatic"
+}
