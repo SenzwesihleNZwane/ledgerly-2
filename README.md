@@ -1,7 +1,7 @@
 # Ledgerly
 
-A group expense-splitting app that tells you the **minimum number of payments**
-needed to settle up — not just who paid what.
+A group expense splitting app that tells you the **minimum number of payments**
+needed to settle up not just who paid what.
 
 ![Java](https://img.shields.io/badge/Java-17-b1443a) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-2f6f4f) ![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-9c7a2e)
 
