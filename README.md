@@ -7,7 +7,7 @@ needed to settle up not just who paid what.
 
 ## The problem
 
-Splitting shared costs — a trip, a shared house, a group gift — is where
+Splitting shared costs a trip, a shared house, a group gift is where
 friendships get awkward. People forget who paid for what, the maths gets
 messy fast, and you often end up with far more payments than necessary to
 settle a group ("I owe Alice, Alice owes Bob, Bob owes me..." — three
@@ -28,7 +28,7 @@ owe money).
 Instead of settling every pairwise debt individually, `BalanceService`
 repeatedly finds the biggest creditor and the biggest debtor remaining,
 and settles the smaller of the two amounts between them directly. This
-greedy approach — the same technique real expense-splitting apps use —
+greedy approach the same technique real expense splitting apps use 
 collapses what could be many small IOUs into a short, practical payment
 list.
 
@@ -48,7 +48,7 @@ This logic is covered by unit tests in `BalanceServiceTest`.
 **Backend:** Java 17, Spring Boot 3 (Web, Data JPA, Security), H2 (file-based,
 zero setup), JWT authentication, Maven.
 
-**Frontend:** Vanilla HTML/CSS/JavaScript — no framework, no build step, so
+**Frontend:** Vanilla HTML/CSS/JavaScript no framework, no build step, so
 it runs by just opening `index.html` (or via a simple dev server) once the
 API is up.
 
@@ -79,18 +79,18 @@ bundle either, unlike NetBeans — see **Prerequisites** below).
 
 1. Open the `ledgerly` folder (the repo root, not `backend` on its own) in
    VS Code. On first open it will prompt you to install the recommended
-   extensions from `.vscode/extensions.json` — accept that prompt, or
+   extensions from `.vscode/extensions.json` accept that prompt, or
    install them manually from the Extensions panel:
    - **Extension Pack for Java** (`vscjava.vscode-java-pack`) — Java
      language support, debugger, Maven, project explorer.
    - **Spring Boot Extension Pack** (`vmware.vscode-spring-boot` +
-     `vscjava.vscode-spring-boot-dashboard`) — Spring Boot run/debug
+     `vscjava.vscode-spring-boot-dashboard`) Spring Boot run/debug
      support, the Spring Dashboard view, `application.properties`
      autocomplete.
-   - **Live Server** (`ritwickdey.liveserver`) — serves the frontend
+   - **Live Server** (`ritwickdey.liveserver`) serves the frontend
      without a build step.
 2. Wait for the Java extension to finish importing the Maven project
-   (watch the bottom status bar — it'll say "Importing Maven projects").
+   (watch the bottom status bar it'll say "Importing Maven projects").
 
 ### Backend
 
@@ -98,7 +98,7 @@ Two ways to run it, both work with no NetBeans involved:
 
 - **Run/Debug button:** open `LedgerlyApplication.java`, click the ▶ Run
   (or 🐞 Debug) codelens above `public static void main`. A preconfigured
-  launch config (`.vscode/launch.json`) is already set up for this — it
+  launch config (`.vscode/launch.json`) is already set up for this it
   sets the working directory to `backend` so the H2 database file lands
   in the right place.
 - **Spring Boot Dashboard:** open the Spring Boot Dashboard view in the
@@ -110,7 +110,7 @@ Two ways to run it, both work with no NetBeans involved:
   ```
 
 The API starts on `http://localhost:8080`. It uses an embedded H2 database
-that persists to `backend/data/` — no separate database install needed.
+that persists to `backend/data/` no separate database install needed.
 Swap it for Postgres/MySQL later by editing `application.properties`.
 
 ### Frontend
@@ -120,7 +120,7 @@ explorer and choose "Open with Live Server", or click "Go Live" in the
 status bar. Or just open the file directly in a browser once the backend
 is running.
 
-If your backend runs anywhere other than `localhost:8080`, update
+If your backend runs anywhere other than `localhost:8081`, update
 `API_BASE` at the top of `frontend/js/api.js`.
 
 ### Prerequisites
@@ -129,7 +129,7 @@ VS Code needs these installed separately (NetBeans bundles a JDK and
 Maven, so this step wasn't needed there):
 - **JDK 17+** — VS Code's Java extension can also download one for you
   on first launch if it doesn't find one.
-- **Maven** — only required for the terminal option above; the Maven
+- **Maven** only required for the terminal option above; the Maven
   extension can use its own bundled Maven if none is found on your PATH.
 
 ### Try it out
@@ -137,7 +137,7 @@ Maven, so this step wasn't needed there):
 1. Register two accounts (e.g. `alice@test.com` and `bob@test.com`).
 2. Log in as Alice, create a group, and add Bob by email.
 3. Log an expense paid by Alice, split equally between both.
-4. Check the Balances panel — it'll show Bob owes Alice, with the
+4. Check the Balances panel it'll show Bob owes Alice, with the
    settlement plan already worked out.
 
 ## API overview
@@ -159,7 +159,7 @@ All endpoints except `/api/auth/**` require `Authorization: Bearer <token>`.
 
 - Percentage-based splits, in addition to equal/exact
 - Mark settlements as "paid" and track settlement history
-- Expense categories and per-category totals
+- Expense categories and per category totals
 - Deploy: backend to Render/Railway, frontend to Netlify/Vercel
 - Integration tests with Testcontainers + a real Postgres instance
 
@@ -167,6 +167,6 @@ All endpoints except `/api/auth/**` require `Authorization: Bearer <token>`.
 
 I built this to practice full-stack development end to end: relational
 data modeling, authentication, a REST API with real business logic (not
-just CRUD), and a frontend that consumes it — plus one genuinely
+just CRUD), and a frontend that consumes it plus one genuinely
 interesting algorithmic problem (the debt simplification) worth testing
 and being able to explain in an interview.
