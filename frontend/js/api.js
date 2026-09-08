@@ -1,6 +1,4 @@
-// Change this if your backend runs somewhere other than localhost:8081,
-// e.g. after deploying to Render/Railway: 'https://your-app.onrender.com/api'
-const API_BASE = 'http://localhost:8081/api';
+const API_BASE = 'https://ledgerly-2-uzdh.onrender.com/api';
 
 const Api = {
   token: localStorage.getItem('ledgerly_token') || null,
@@ -25,7 +23,7 @@ const Api = {
     });
 
     let data = null;
-    try { data = await res.json(); } catch (_) { /* empty body */ }
+    try { data = await res.json(); } catch (_) {}
 
     if (!res.ok) {
       const message = (data && data.message) || `Request failed (${res.status})`;
