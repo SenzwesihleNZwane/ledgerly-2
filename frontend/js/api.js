@@ -1,4 +1,4 @@
-const API_BASE = 'https://ledgerly-2-uzdh.onrender.com/api';
+const API_BASE = 'https://ledgerly-2-urdh.onrender.com/api';
 
 const Api = {
   token: localStorage.getItem('ledgerly_token') || null,
