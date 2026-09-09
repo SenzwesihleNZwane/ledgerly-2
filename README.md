@@ -1,9 +1,16 @@
+
 # Ledgerly
 
 A group expense splitting app that tells you the **minimum number of payments**
 needed to settle up not just who paid what.
 
 ![Java](https://img.shields.io/badge/Java-17-b1443a) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-2f6f4f) ![JavaScript](https://img.shields.io/badge/JavaScript-Vanilla-9c7a2e)
+
+**Live demo (frontend):** https://ledgerly-2.netlify.app/
+> The backend API currently runs locally only (see [Running it locally](#running-it-locally-vs-code)
+> below) — Netlify hosts the static frontend, so the deployed link showcases the UI but needs a
+> local backend running to register, log in, and log expenses. A hosted backend is on the roadmap
+> (see [What I'd add next](#what-id-add-next)).
 
 ## The problem
 
@@ -50,7 +57,7 @@ zero setup), JWT authentication, Maven.
 
 **Frontend:** Vanilla HTML/CSS/JavaScript no framework, no build step, so
 it runs by just opening `index.html` (or via a simple dev server) once the
-API is up.
+API is up. Deployed statically to Netlify.
 
 ## Project structure
 
@@ -115,13 +122,18 @@ Swap it for Postgres/MySQL later by editing `application.properties`.
 
 ### Frontend
 
-No build step required. Right-click `frontend/index.html` in the VS Code
-explorer and choose "Open with Live Server", or click "Go Live" in the
-status bar. Or just open the file directly in a browser once the backend
-is running.
+**Option A local, against your own backend:** No build step required.
+Right-click `frontend/index.html` in the VS Code explorer and choose
+"Open with Live Server", or click "Go Live" in the status bar. Or just
+open the file directly in a browser once the backend is running.
 
 If your backend runs anywhere other than `localhost:8081`, update
 `API_BASE` at the top of `frontend/js/api.js`.
+
+**Option B the deployed version:** Visit https://ledgerly-2.netlify.app/
+to see the UI. Since the backend isn't hosted yet, actions that hit the
+API (register, login, logging expenses) will need a local backend
+running per the steps above, with `API_BASE` pointed at it.
 
 ### Prerequisites
 
@@ -157,10 +169,11 @@ All endpoints except `/api/auth/**` require `Authorization: Bearer <token>`.
 
 ## What I'd add next
 
+- Host the backend (Render/Railway/Fly.io) so the Netlify frontend is fully
+  functional without a local API
 - Percentage-based splits, in addition to equal/exact
 - Mark settlements as "paid" and track settlement history
 - Expense categories and per category totals
-- Deploy: backend to Render/Railway, frontend to Netlify/Vercel
 - Integration tests with Testcontainers + a real Postgres instance
 
 ## Why this project
@@ -170,3 +183,4 @@ data modeling, authentication, a REST API with real business logic (not
 just CRUD), and a frontend that consumes it plus one genuinely
 interesting algorithmic problem (the debt simplification) worth testing
 and being able to explain in an interview.
+```
