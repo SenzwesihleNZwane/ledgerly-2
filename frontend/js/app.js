@@ -36,8 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = isLoginMode ? 'Logging in...' : 'Creating account...';
 
         try {
-            // Replace with your actual backend API base URL if not defined in api.js
-            const API_BASE_URL = window.API_BASE_URL || 'https://your-backend-service.onrender.com';
+            const API_BASE_URL = window.API_BASE_URL || 'https://ledgerly-backend.onrender.com';
             const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
             
             const payload = isLoginMode 
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             
-            // Store token or user session details if returned
             if (data.token) {
                 localStorage.setItem('token', data.token);
             }
@@ -67,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('user', JSON.stringify(data.user));
             }
 
-            // Redirect to dashboard or main app view
             window.location.href = 'dashboard.html';
 
         } catch (error) {
@@ -77,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Wireframe Topography Canvas Animation Background
     const canvas = document.getElementById('bgCanvas');
     const ctx = canvas.getContext('2d');
 
