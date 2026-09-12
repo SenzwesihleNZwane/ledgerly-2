@@ -1,10 +1,10 @@
 :root {
-    --bg-dark: #0a0c14;
-    --card-bg: rgba(16, 20, 32, 0.85);
+    --bg-dark: #07090e;
+    --card-bg: rgba(13, 17, 28, 0.9);
     --border-color: rgba(255, 255, 255, 0.08);
     --accent: #00b4d8;
     --text-main: #f8f9fa;
-    --text-muted: #94a3b8;
+    --text-muted: #8c9bae;
 }
 
 * {
@@ -37,7 +37,7 @@ body {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.1fr 0.9fr;
     width: 100vw;
     min-height: 100vh;
 }
@@ -56,10 +56,16 @@ body {
 
 .badge {
     color: var(--accent);
-    font-family: monospace;
-    font-size: 0.9rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
     display: inline-block;
     margin-bottom: 1.5rem;
+    background: rgba(0, 180, 216, 0.1);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 180, 216, 0.2);
 }
 
 .hero-content h1 {
@@ -67,9 +73,10 @@ body {
     line-height: 1.2;
     font-weight: 700;
     margin-bottom: 2rem;
+    letter-spacing: -0.02em;
 }
 
-.hero-content h1 b, .hero-content h1 strong {
+.hero-content h1 span {
     color: var(--accent);
 }
 
@@ -78,7 +85,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
     margin-bottom: 1.5rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
@@ -176,6 +183,7 @@ body {
     padding: 4px;
     border-radius: 10px;
     margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
 }
 
 .tab-btn {
@@ -206,16 +214,17 @@ body {
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5srem;
     gap: 6px;
     transition: all 0.3s ease;
+    max-height: 100px;
+    opacity: 1;
+    overflow: hidden;
 }
 
 .input-group.hidden {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-8px);
     max-height: 0;
-    overflow: hidden;
     margin: 0;
     padding: 0;
     pointer-events: none;
@@ -245,7 +254,7 @@ body {
 
 .submit-btn {
     background: var(--accent);
-    color: #000;
+    color: #07090e;
     border: none;
     border-radius: 10px;
     padding: 14px;
