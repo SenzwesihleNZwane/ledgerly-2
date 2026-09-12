@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.textContent = isLoginMode ? 'Logging in...' : 'Creating account...';
 
         try {
-            const API_BASE_URL = window.API_BASE_URL || 'https://ledgerly-backend.onrender.com';
+            const API_BASE_URL = window.API_BASE_URL || 'https://ledgerly-2-urdh.onrender.com';
             const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
             
             const payload = isLoginMode 
