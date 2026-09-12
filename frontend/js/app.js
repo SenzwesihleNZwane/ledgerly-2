@@ -1,380 +1,239 @@
-// Change this to match your currency - it's just a display label.
-const CURRENCY = 'R';
+const API = (() => {
+  const STORAGE_KEYS = {
+    USERS: 'ledgerly_users',
+    CURRENT_USER: 'ledgerly_current_user',
+    GROUPS: 'ledgerly_groups'
+  };
 
-const state = {
-  currentUser: null,
-  groups: [],
-  activeGroupId: null,
-  activeGroup: null,
-};
+  function initStorage() {
+    if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+      const defaultUsers = [
+        { id: 'u1', name: 'Thabo Mokoena', email: 'thabo@ledgerly.app', password: 'password123' },
+        { id: 'u2', name: 'Aisha Naidoo', email: 'aisha@ledgerly.app', password: 'password123' },
+        { id: 'u3', name: 'Kagiso Molefe', email: 'kagiso@ledgerly.app', password: 'password123' }
+      ];
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultUsers));
+    }
 
-// ---------- small DOM helpers ----------
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    if (!localStorage.getItem(STORAGE_KEYS.GROUPS)) {
+      const defaultGroups = [
+        {
+          id: 'g1',
+          name: 'Durban Road Trip 🌴',
+          createdBy: 'thabo@ledgerly.app',
+          members: [
+            { name: 'Thabo Mokoena', email: 'thabo@ledgerly.app' },
+            { name: 'Aisha Naidoo', email: 'aisha@ledgerly.app' },
+            { name: 'Kagiso Molefe', email: 'kagiso@ledgerly.app' }
+          ],
+          expenses: [
+            {
+              id: 'e1',
+              description: 'Car Rental & Petrol',
+              amount: 1500.00,
+              paidBy: { name: 'Thabo Mokoena', email: 'thabo@ledgerly.app' },
+              date: new Date(Date.now() - 86400000 * 3).toISOString(),
+              splits: {
+                'thabo@ledgerly.app': 500.00,
+                'aisha@ledgerly.app': 500.00,
+                'kagiso@ledgerly.app': 500.00
+              }
+            },
+            {
+              id: 'e2',
+              description: 'Beachfront Dinner & Drinks',
+              amount: 1260.00,
+              paidBy: { name: 'Aisha Naidoo', email: 'aisha@ledgerly.app' },
+              date: new Date(Date.now() - 86400000 * 2).toISOString(),
+              splits: {
+                'thabo@ledgerly.app': 420.00,
+                'aisha@ledgerly.app': 420.00,
+                'kagiso@ledgerly.app': 420.00
+              }
+            }
+          ]
+        }
+      ];
+      localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(defaultGroups));
+    }
+  }
 
-function money(amount) {
-  const n = Number(amount);
-  return `${CURRENCY}${n.toFixed(2)}`;
-}
+  initStorage();
 
-function showToast(message, isError = false) {
-  const toast = $('#toast');
-  toast.textContent = message;
-  toast.classList.toggle('error', isError);
-  toast.classList.remove('hidden');
-  setTimeout(() => toast.classList.add('hidden'), 3200);
-}
+  const getUsers = () => JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
+  const setUsers = (users) => localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  
+  const getGroups = () => JSON.parse(localStorage.getItem(STORAGE_KEYS.GROUPS)) || [];
+  const setGroups = (groups) => localStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(groups));
 
-function openModal(id) {
-  $('#modal-backdrop').classList.remove('hidden');
-  $$('.modal').forEach((m) => m.classList.add('hidden'));
-  $(`#${id}`).classList.remove('hidden');
-}
-function closeModals() {
-  $('#modal-backdrop').classList.add('hidden');
-}
+  return {
+    auth: {
+      getSession() {
+        const userJson = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+        return userJson ? JSON.parse(userJson) : null;
+      },
+      login(email, password) {
+        const users = getUsers();
+        const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+        if (user) {
+          const sessionUser = { id: user.id, name: user.name, email: user.email };
+          localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(sessionUser));
+          return sessionUser;
+        }
+        return null;
+      },
+      register(name, email, password) {
+        const users = getUsers();
+        if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+          throw new Error('An account with this email already exists.');
+        }
+        const newUser = { id: 'u_' + Date.now(), name, email, password };
+        users.push(newUser);
+        setUsers(users);
 
-// ---------- boot ----------
-window.addEventListener('DOMContentLoaded', init);
-
-async function init() {
-  wireAuthForms();
-  wireTabs();
-  wireAppShell();
-  wireModals();
-
-  if (Api.token) {
-    try {
-      const groups = await Api.getGroups();
-      // token is valid - we don't get a /me endpoint, so pull identity
-      // from the token payload's stored copy in localStorage instead
-      const cached = JSON.parse(localStorage.getItem('ledgerly_user') || 'null');
-      if (cached) {
-        enterApp(cached, groups);
-        return;
+        const sessionUser = { id: newUser.id, name: newUser.name, email: newUser.email };
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(sessionUser));
+        return sessionUser;
+      },
+      logout() {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       }
-    } catch (e) {
-      Api.setToken(null);
-    }
-  }
-  showAuthScreen();
-}
+    },
 
-function showAuthScreen() {
-  $('#auth-screen').classList.remove('hidden');
-  $('#app-shell').classList.add('hidden');
-}
+    groups: {
+      listForUser(email) {
+        const groups = getGroups();
+        return groups.filter(g => g.members.some(m => m.email.toLowerCase() === email.toLowerCase()));
+      },
+      create(name, currentUser) {
+        const groups = getGroups();
+        const newGroup = {
+          id: 'g_' + Date.now(),
+          name,
+          createdBy: currentUser.email,
+          members: [
+            { name: currentUser.name, email: currentUser.email }
+          ],
+          expenses: []
+        };
+        groups.push(newGroup);
+        setGroups(groups);
+        return newGroup;
+      },
+      addMember(groupId, email) {
+        const users = getUsers();
+        const userToAdd = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+        
+        const memberName = userToAdd ? userToAdd.name : email.split('@')[0];
 
-function enterApp(user, groups) {
-  state.currentUser = user;
-  state.groups = groups;
-  $('#auth-screen').classList.add('hidden');
-  $('#app-shell').classList.remove('hidden');
-  $('#current-user-name').textContent = `${user.name} · ${user.email}`;
-  renderGroupList();
-}
+        const groups = getGroups();
+        const group = groups.find(g => g.id === groupId);
+        if (!group) throw new Error('Group not found.');
 
-// ---------- auth ----------
-function wireTabs() {
-  $$('.tab-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      $$('.tab-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      const tab = btn.dataset.tab;
-      $('#login-form').classList.toggle('hidden', tab !== 'login');
-      $('#register-form').classList.toggle('hidden', tab !== 'register');
-    });
-  });
-}
+        if (group.members.some(m => m.email.toLowerCase() === email.toLowerCase())) {
+          throw new Error('Member is already in this group.');
+        }
 
-function wireAuthForms() {
-  $('#login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      const email = $('#login-email').value.trim();
-      const password = $('#login-password').value;
-      const auth = await Api.login(email, password);
-      afterAuth(auth);
-    } catch (err) {
-      showToast(err.message, true);
-    }
-  });
+        group.members.push({ name: memberName, email: email.toLowerCase() });
+        setGroups(groups);
+        return group;
+      },
+      addExpense(groupId, expenseData) {
+        const groups = getGroups();
+        const group = groups.find(g => g.id === groupId);
+        if (!group) throw new Error('Group not found.');
 
-  $('#register-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      const name = $('#register-name').value.trim();
-      const email = $('#register-email').value.trim();
-      const password = $('#register-password').value;
-      const auth = await Api.register(name, email, password);
-      afterAuth(auth);
-    } catch (err) {
-      showToast(err.message, true);
-    }
-  });
+        const users = getUsers();
+        const payerUser = users.find(u => u.email.toLowerCase() === expenseData.paidByEmail.toLowerCase()) 
+                          || group.members.find(m => m.email.toLowerCase() === expenseData.paidByEmail.toLowerCase());
 
-  $('#logout-btn').addEventListener('click', () => {
-    Api.setToken(null);
-    localStorage.removeItem('ledgerly_user');
-    state.currentUser = null;
-    state.groups = [];
-    state.activeGroupId = null;
-    state.activeGroup = null;
-    // Reset the group panel back to its empty state so a stale group
-    // isn't left visible (with a now-invalid group id) after logging
-    // back in as someone else.
-    $('#group-view').classList.add('hidden');
-    $('#empty-state').classList.remove('hidden');
-    showAuthScreen();
-  });
-}
+        const newExpense = {
+          id: 'e_' + Date.now(),
+          description: expenseData.description,
+          amount: parseFloat(expenseData.amount),
+          paidBy: { name: payerUser ? payerUser.name : expenseData.paidByEmail, email: expenseData.paidByEmail },
+          date: new Date().toISOString(),
+          splits: expenseData.splits
+        };
 
-async function afterAuth(auth) {
-  Api.setToken(auth.token);
-  const user = { id: auth.id, name: auth.name, email: auth.email };
-  localStorage.setItem('ledgerly_user', JSON.stringify(user));
-  const groups = await Api.getGroups();
-  enterApp(user, groups);
-  showToast(`Welcome, ${user.name.split(' ')[0]}`);
-}
-
-// ---------- groups sidebar ----------
-function renderGroupList() {
-  const list = $('#group-list');
-  list.innerHTML = '';
-  if (state.groups.length === 0) {
-    const p = document.createElement('p');
-    p.className = 'empty-row';
-    p.textContent = 'No groups yet.';
-    list.appendChild(p);
-    return;
-  }
-  state.groups.forEach((g) => {
-    const btn = document.createElement('button');
-    btn.className = 'group-item' + (g.id === state.activeGroupId ? ' active' : '');
-    btn.textContent = g.name;
-    btn.addEventListener('click', () => selectGroup(g.id));
-    list.appendChild(btn);
-  });
-}
-
-async function selectGroup(groupId) {
-  state.activeGroupId = groupId;
-  renderGroupList();
-  $('#empty-state').classList.add('hidden');
-  $('#group-view').classList.remove('hidden');
-
-  try {
-    const [group, expenses, balances] = await Promise.all([
-      Api.getGroup(groupId),
-      Api.getExpenses(groupId),
-      Api.getBalances(groupId),
-    ]);
-    state.activeGroup = group;
-    renderGroupHeader(group);
-    renderExpenses(expenses);
-    renderBalances(balances);
-  } catch (err) {
-    showToast(err.message, true);
-  }
-}
-
-function renderGroupHeader(group) {
-  $('#group-name-heading').textContent = group.name;
-  const row = $('#members-row');
-  row.innerHTML = '';
-  group.members.forEach((m) => {
-    const chip = document.createElement('span');
-    chip.className = 'member-chip';
-    chip.textContent = m.name;
-    row.appendChild(chip);
-  });
-}
-
-function renderExpenses(expenses) {
-  const list = $('#expense-list');
-  list.innerHTML = '';
-  if (expenses.length === 0) {
-    list.innerHTML = '<p class="empty-row">No expenses logged yet. Add the first one.</p>';
-    return;
-  }
-  expenses.forEach((e) => {
-    const row = document.createElement('div');
-    row.className = 'expense-row';
-    const date = new Date(e.createdAt).toLocaleDateString();
-    row.innerHTML = `
-      <div class="expense-main">
-        <span class="expense-desc">${escapeHtml(e.description)}</span>
-        <span class="expense-meta">Paid by ${escapeHtml(e.paidByName)} · ${date} · ${e.splitType === 'EQUAL' ? 'split equally' : 'exact split'}</span>
-      </div>
-      <span class="expense-amount">${money(e.amount)}</span>
-    `;
-    list.appendChild(row);
-  });
-}
-
-function renderBalances(balanceResponse) {
-  const balList = $('#balance-list');
-  balList.innerHTML = '';
-  balanceResponse.balances.forEach((b) => {
-    const row = document.createElement('div');
-    row.className = 'balance-row';
-    const amt = Number(b.netAmount);
-    const cls = amt > 0.005 ? 'credit' : amt < -0.005 ? 'debit' : 'even';
-    const label = amt > 0.005 ? `+${money(amt)}` : amt < -0.005 ? `-${money(Math.abs(amt))}` : 'settled';
-    row.innerHTML = `
-      <span class="balance-name">${escapeHtml(b.name)}</span>
-      <span class="balance-amount ${cls}">${label}</span>
-    `;
-    balList.appendChild(row);
-  });
-
-  const setList = $('#settlement-list');
-  setList.innerHTML = '';
-  if (balanceResponse.settlements.length === 0) {
-    setList.innerHTML = '<p class="empty-row">Everyone is settled up. 🎉</p>';
-    return;
-  }
-  balanceResponse.settlements.forEach((s) => {
-    const row = document.createElement('div');
-    row.className = 'settlement-row';
-    row.innerHTML = `
-      <span class="settlement-text"><span class="who">${escapeHtml(s.fromName)}</span> owes <span class="who">${escapeHtml(s.toName)}</span></span>
-      <span class="settlement-amount">${money(s.amount)}</span>
-    `;
-    setList.appendChild(row);
-  });
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-// ---------- app shell wiring (modals triggers) ----------
-function wireAppShell() {
-  $('#new-group-btn').addEventListener('click', () => openModal('new-group-modal'));
-  $('#add-member-btn').addEventListener('click', () => openModal('add-member-modal'));
-  $('#add-expense-btn').addEventListener('click', () => {
-    populateExpenseForm();
-    openModal('add-expense-modal');
-  });
-}
-
-// ---------- modals ----------
-function wireModals() {
-  $('#modal-backdrop').addEventListener('click', (e) => {
-    if (e.target === $('#modal-backdrop')) closeModals();
-  });
-  $$('.modal-cancel').forEach((btn) => btn.addEventListener('click', closeModals));
-
-  $('#new-group-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      const name = $('#new-group-name').value.trim();
-      const group = await Api.createGroup(name);
-      state.groups.push(group);
-      $('#new-group-name').value = '';
-      closeModals();
-      renderGroupList();
-      selectGroup(group.id);
-      showToast(`Created "${group.name}"`);
-    } catch (err) {
-      showToast(err.message, true);
-    }
-  });
-
-  $('#add-member-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      const email = $('#add-member-email').value.trim();
-      const group = await Api.addMember(state.activeGroupId, email);
-      state.activeGroup = group;
-      $('#add-member-email').value = '';
-      closeModals();
-      renderGroupHeader(group);
-      showToast('Member added');
-    } catch (err) {
-      showToast(err.message, true);
-    }
-  });
-
-  $('#expense-split-type').addEventListener('change', populateExpenseForm);
-
-  $('#add-expense-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-      const payload = buildExpensePayload();
-      await Api.addExpense(state.activeGroupId, payload);
-      closeModals();
-      $('#add-expense-form').reset();
-      showToast('Expense added');
-      const [expenses, balances] = await Promise.all([
-        Api.getExpenses(state.activeGroupId),
-        Api.getBalances(state.activeGroupId),
-      ]);
-      renderExpenses(expenses);
-      renderBalances(balances);
-    } catch (err) {
-      showToast(err.message, true);
-    }
-  });
-}
-
-function populateExpenseForm() {
-  const group = state.activeGroup;
-  if (!group) return;
-
-  const paidBySelect = $('#expense-paid-by');
-  paidBySelect.innerHTML = group.members
-    .map((m) => `<option value="${m.id}">${escapeHtml(m.name)}</option>`)
-    .join('');
-
-  const splitType = $('#expense-split-type').value;
-  const container = $('#expense-participants');
-  container.innerHTML = '';
-
-  group.members.forEach((m) => {
-    const row = document.createElement('div');
-    row.className = 'participant-row';
-    row.innerHTML = `
-      <label>
-        <input type="checkbox" class="participant-check" value="${m.id}" checked>
-        ${escapeHtml(m.name)}
-      </label>
-      ${splitType === 'EXACT'
-        ? `<input type="number" step="0.01" min="0" class="participant-input" data-user="${m.id}" placeholder="0.00">`
-        : ''}
-    `;
-    container.appendChild(row);
-  });
-}
-
-function buildExpensePayload() {
-  const description = $('#expense-description').value.trim();
-  const amount = parseFloat($('#expense-amount').value);
-  const paidByUserId = parseInt($('#expense-paid-by').value, 10);
-  const splitType = $('#expense-split-type').value;
-
-  const checked = $$('.participant-check').filter((c) => c.checked);
-  if (checked.length === 0) {
-    throw new Error('Select at least one participant to split with');
-  }
-
-  let splits;
-  if (splitType === 'EQUAL') {
-    splits = checked.map((c) => ({ userId: parseInt(c.value, 10) }));
-  } else {
-    splits = checked.map((c) => {
-      const input = $(`.participant-input[data-user="${c.value}"]`);
-      const splitAmount = parseFloat(input.value);
-      if (isNaN(splitAmount)) {
-        throw new Error('Enter an exact amount for every selected participant');
+        group.expenses.push(newExpense);
+        setGroups(groups);
+        return group;
       }
-      return { userId: parseInt(c.value, 10), amount: splitAmount };
-    });
-  }
+    },
 
-  return { description, amount, paidByUserId, splitType, splits };
-}
+    calculateBalances(group) {
+      const balances = {};
+      group.members.forEach(m => {
+        balances[m.email] = 0;
+      });
+
+      group.expenses.forEach(exp => {
+        const payer = exp.paidBy.email;
+        if (balances[payer] !== undefined) {
+          balances[payer] += exp.amount;
+        } else {
+          balances[payer] = exp.amount;
+        }
+
+        Object.entries(exp.splits).forEach(([email, share]) => {
+          if (balances[email] !== undefined) {
+            balances[email] -= share;
+          } else {
+            balances[email] = -share;
+          }
+        });
+      });
+
+      return balances;
+    },
+
+    calculateSettlements(balances, members) {
+      const debtors = [];
+      const creditors = [];
+
+      Object.entries(balances).forEach(([email, amount]) => {
+        const memberObj = members.find(m => m.email === email);
+        const name = memberObj ? memberObj.name : email;
+        
+        const rounded = Math.round(amount * 100) / 100;
+        if (rounded < -0.01) {
+          debtors.push({ email, name, amount: Math.abs(rounded) });
+        } else if (rounded > 0.01) {
+          creditors.push({ email, name, amount: rounded });
+        }
+      });
+
+      debtors.sort((a, b) => b.amount - a.amount);
+      creditors.sort((a, b) => b.amount - a.amount);
+
+      const settlements = [];
+      let i = 0, j = 0;
+
+      while (i < debtors.length && j < creditors.length) {
+        const debtor = debtors[i];
+        const creditor = creditors[j];
+
+        const settleAmount = Math.min(debtor.amount, creditor.amount);
+        if (settleAmount > 0.01) {
+          settlements.exports = true;
+          settlements.push({
+            fromEmail: debtor.email,
+            fromName: debtor.name,
+            toEmail: creditor.email,
+            toName: creditor.name,
+            amount: Math.round(settleAmount * 100) / 100
+          });
+        }
+
+        debtor.amount -= settleAmount;
+        creditor.amount -= settleAmount;
+
+        if (debtor.amount < 0.01) i++;
+        if (creditor.amount < 0.01) j++;
+      }
+
+      return settlements;
+    }
+  };
+})();
