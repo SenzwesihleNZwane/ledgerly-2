@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Tab switching logic
     const loginTabBtn = document.getElementById('loginTabBtn');
     const signupTabBtn = document.getElementById('signupTabBtn');
     const nameFieldContainer = document.getElementById('nameFieldContainer');
@@ -14,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         signupTabBtn.classList.remove('active');
         nameFieldContainer.classList.add('hidden');
         submitBtn.textContent = 'Log in';
+        document.getElementById('name').removeAttribute('required');
     });
 
     signupTabBtn.addEventListener('click', () => {
@@ -22,20 +22,58 @@ document.addEventListener('DOMContentLoaded', () => {
         loginTabBtn.classList.remove('active');
         nameFieldContainer.classList.remove('hidden');
         submitBtn.textContent = 'Create account';
+        document.getElementById('name').setAttribute('required', 'true');
     });
 
-    authForm.addEventListener('submit', (e) => {
+    authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const name = document.getElementById('name').value.trim();
 
-        if (isLoginMode) {
-            console.log('Logging in with:', email);
-            // Insert login handler call here
-        } else {
-            const name = document.getElementById('name').value;
-            console.log('Creating account for:', name, email);
-            // Insert signup handler call here
+        submitBtn.disabled = true;
+        submitBtn.textContent = isLoginMode ? 'Logging in...' : 'Creating account...';
+
+        try {
+            // Replace with your actual backend API base URL if not defined in api.js
+            const API_BASE_URL = window.API_BASE_URL || 'https://your-backend-service.onrender.com';
+            const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+            
+            const payload = isLoginMode 
+                ? { email, password } 
+                : { name, email, password };
+
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Authentication failed. Please check your credentials.');
+            }
+
+            const data = await response.json();
+            
+            // Store token or user session details if returned
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            }
+            if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
+
+            // Redirect to dashboard or main app view
+            window.location.href = 'dashboard.html';
+
+        } catch (error) {
+            alert(error.message || 'An error occurred. Please ensure your backend service is running.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = isLoginMode ? 'Log in' : 'Create account';
         }
     });
 
@@ -44,9 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = canvas.getContext('2d');
 
     let width, height;
-    let particles = [];
-    const spacing = 35;
     let time = 0;
+    const spacing = 35;
 
     function resize() {
         width = canvas.width = window.innerWidth;
@@ -72,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const px = (x - 1) * spacing;
                 const py = (y - 1) * spacing;
 
-                // Create wave heights resembling mountain/topography wireframes
                 const wave1 = Math.sin(x * 0.3 + time * 1.5) * Math.cos(y * 0.3 + time) * 25;
                 const wave2 = Math.sin((x * y) * 0.01 + time) * 15;
                 const elevation = wave1 + wave2;
